@@ -1,5 +1,4 @@
-# Interactive Kerberoasting Script (Manual Approach)
-
+# Interactive Kerberoasting Script 
 Write-Host "[+] Enumerating SPNs in the Domain..." -ForegroundColor Cyan
 
 # Enumerate SPNs
